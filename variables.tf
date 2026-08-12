@@ -56,8 +56,8 @@ variable "cluster_vpc_config" {
   default = []
 
   validation {
-    condition     = !var.cluster_enable || length(var.cluster_vpc_config) == 1
-    error_message = "Provide exactly one cluster_vpc_config block when cluster_enable is true. Pass it as a Terraform list/object, not as a quoted string."
+    condition     = length(var.cluster_vpc_config) <= 1
+    error_message = "Provide at most one cluster_vpc_config block. Pass it as a Terraform list/object, not as a quoted string."
   }
 }
 
