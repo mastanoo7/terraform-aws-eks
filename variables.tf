@@ -42,7 +42,23 @@ variable "cluster_version" {
 
 variable "cluster_vpc_config" {
   description = "(Required) Nested argument for the VPC associated with your cluster. Amazon EKS VPC resources have specific requirements to work properly with Kubernetes. For more information, see Cluster VPC Considerations and Cluster Security Group Considerations in the Amazon EKS User Guide."
-  default     = []
+
+  # aws_eks_cluster supports exactly one vpc_config block.  Keeping this as a
+  # list preserves the dynamic block interface while ensuring Terraform gets a
+  # collection rather than an accidentally quoted configuration string.
+  type = list(object({
+    subnet_ids              = list(string)
+    security_group_ids      = optional(list(string))
+    public_access_cidrs     = optional(list(string))
+    endpoint_private_access = optional(bool)
+    endpoint_public_access  = optional(bool)
+  }))
+  default = []
+
+  validation {
+    condition     = !var.cluster_enable || length(var.cluster_vpc_config) == 1
+    error_message = "Provide exactly one cluster_vpc_config block when cluster_enable is true. Pass it as a Terraform list/object, not as a quoted string."
+  }
 }
 
 variable "cluster_encryption_config" {
