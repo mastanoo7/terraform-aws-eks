@@ -9,7 +9,7 @@ resource "aws_eks_cluster" "eks_cluster" {
 
   dynamic "vpc_config" {
     iterator = vpc_config
-    for_each = var.cluster_vpc_config
+    for_each = jsondecode(var.cluster_vpc_config)
 
     content {
       subnet_ids = lookup(vpc_config.value, "subnet_ids", null)
