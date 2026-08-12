@@ -41,13 +41,18 @@ variable "cluster_version" {
 }
 
 variable "cluster_vpc_config" {
-  description = "(Required) JSON-encoded VPC configuration supplied by Morpheus."
+  description = "Morpheus-safe format: subnet1,subnet2|security-group-id"
   type        = string
-  default     = "[]"
+  default     = ""
 
   validation {
-    condition     = try(length(jsondecode(var.cluster_vpc_config)) <= 1, false)
-    error_message = "cluster_vpc_config must be valid JSON containing at most one configuration object."
+    condition = var.cluster_vpc_config == "" || try(
+      length(split("|", var.cluster_vpc_config)) == 2 &&
+      length(compact(split(",", split("|", var.cluster_vpc_config)[0]))) >= 2 &&
+      length(compact(split(",", split("|", var.cluster_vpc_config)[1]))) >= 1,
+      false
+    )
+    error_message = "cluster_vpc_config must use subnet1,subnet2|security-group-id format."
   }
 }
 
@@ -128,15 +133,15 @@ variable "node_group_role_arn" {
 }
 
 variable "node_group_subnet_ids" {
-  description = "(Required) Identifiers of EC2 Subnets to associate with the EKS Node Group. These subnets must have the following resource tag: kubernetes.io/cluster/CLUSTER_NAME (where CLUSTER_NAME is replaced with the name of the EKS Cluster)."
-  type    = string
-  default = "[]"
+  description = "Comma-separated subnet IDs for the EKS Node Group."
+  type        = string
+  default     = ""
 }
 
 variable "node_group_scaling_config" {
-  description = ""
-  type    = string
-  default = "[]"
+  description = "Comma-separated max,desired,min node-group sizes."
+  type        = string
+  default     = "1,1,1"
 }
 
 variable "node_group_ami_type" {
@@ -160,9 +165,9 @@ variable "node_group_force_update_version" {
 }
 
 variable "node_group_instance_types" {
-  description = "(Optional) Set of instance types associated with the EKS Node Group. Defaults to ['t3.medium']. Terraform will only perform drift detection if a configuration value is provided. Currently, the EKS API only accepts a single value in the set."
-  type    = string
-  default = "[\"c7i-flex.large\"]"
+  description = "Morpheus plan label or EC2 instance type for the EKS Node Group."
+  type        = string
+  default     = "c7i-flex.large"
 }
 
 variable "node_group_labels" {
