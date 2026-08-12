@@ -17,7 +17,7 @@ variable "tags" {
 #-----------------------------------------------------------
 variable "cluster_enable" {
   description = "Enable creating AWS EKS cluster"
-  default     = true
+  default     = false
 }
 
 variable "cluster_name" {
