@@ -1,5 +1,6 @@
 provider "aws" {
-  region     = "ap-southeast-3"
-  access_key = "AKIAZHKUUH7XZVQYVHV5"
-  secret_key = "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"
-  }
+  region     = coalesce(var.aws_region, var.region)
+  access_key = var.access_key
+  secret_key = var.secret_key
+  profile    = var.aws_profile
+}
