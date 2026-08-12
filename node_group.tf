@@ -7,24 +7,19 @@ resource "aws_eks_node_group" "eks_node_group" {
   cluster_name    = var.node_group_cluster_name
   node_group_name = var.node_group_name
   node_role_arn   = var.node_group_role_arn
-  subnet_ids      = jsondecode(var.node_group_subnet_ids)
+  subnet_ids      = compact(split(",", var.node_group_subnet_ids))
 
-  dynamic "scaling_config" {
-    iterator = scaling_config
-    for_each = jsondecode(var.node_group_scaling_config)
-
-    content {
-      max_size     = lookup(scaling_config.value, "max_size", null)
-      desired_size = lookup(scaling_config.value, "desired_size", null)
-      min_size     = lookup(scaling_config.value, "min_size", null)
-    }
+  scaling_config {
+    max_size     = tonumber(split(",", var.node_group_scaling_config)[0])
+    desired_size = tonumber(split(",", var.node_group_scaling_config)[1])
+    min_size     = tonumber(split(",", var.node_group_scaling_config)[2])
   }
 
   ami_type = var.node_group_ami_type
   // capacity_type        = var.node_group_capacity_type
   disk_size            = var.node_group_disk_size
   force_update_version = var.node_group_force_update_version
-  instance_types       = jsondecode(var.node_group_instance_types)
+  instance_types       = [lower(replace(split(" - ", var.node_group_instance_types)[0], " ", "."))]
   labels               = var.node_group_labels
   release_version      = var.node_group_release_version
   version              = var.node_group_version
