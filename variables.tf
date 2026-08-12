@@ -3,7 +3,7 @@
 #-----------------------------------------------------------
 variable "region" {
   description = "The region where to deploy this code (e.g. us-east-1)."
-  default     = "ap-southeast-1"
+  default     = "ap-southeast-3"
 }
 
 variable "tags" {
@@ -159,7 +159,7 @@ variable "node_group_force_update_version" {
 
 variable "node_group_instance_types" {
   description = "(Optional) Set of instance types associated with the EKS Node Group. Defaults to ['t3.medium']. Terraform will only perform drift detection if a configuration value is provided. Currently, the EKS API only accepts a single value in the set."
-  default     = ["t3.medium"]
+  default     = ["c7i-flex.large"]
 }
 
 variable "node_group_labels" {
