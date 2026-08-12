@@ -1,6 +1,5 @@
-# AWS provider configuration. Credentials are resolved from the execution
-# environment (for example AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY, an AWS
-# profile, or an assumed IAM role); do not store credentials in this module.
 provider "aws" {
-  region = var.region
+  region     = "ap-southeast-3"
+  access_key = "AKIAZHKUUH7XZVQYVHV5"
+  secret_key = "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"
 }
