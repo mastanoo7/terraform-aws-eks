@@ -6,6 +6,32 @@ variable "region" {
   default     = "ap-southeast-3"
 }
 
+variable "access_key" {
+  description = "AWS access key supplied by the Morpheus Terraform Cloud Profile."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "secret_key" {
+  description = "AWS secret key supplied by the Morpheus Terraform Cloud Profile."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "aws_region" {
+  description = "AWS region supplied by the Morpheus Terraform Cloud Profile."
+  type        = string
+  default     = null
+}
+
+variable "aws_profile" {
+  description = "Optional shared AWS credentials profile name."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "A list of tag blocks."
   type        = map(string)
