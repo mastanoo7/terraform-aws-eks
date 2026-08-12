@@ -41,23 +41,13 @@ variable "cluster_version" {
 }
 
 variable "cluster_vpc_config" {
-  description = "(Required) Nested argument for the VPC associated with your cluster. Amazon EKS VPC resources have specific requirements to work properly with Kubernetes. For more information, see Cluster VPC Considerations and Cluster Security Group Considerations in the Amazon EKS User Guide."
-
-  # aws_eks_cluster supports exactly one vpc_config block.  Keeping this as a
-  # list preserves the dynamic block interface while ensuring Terraform gets a
-  # collection rather than an accidentally quoted configuration string.
-  type = list(object({
-    subnet_ids              = list(string)
-    security_group_ids      = optional(list(string))
-    public_access_cidrs     = optional(list(string))
-    endpoint_private_access = optional(bool)
-    endpoint_public_access  = optional(bool)
-  }))
-  default = []
+  description = "(Required) JSON-encoded VPC configuration supplied by Morpheus."
+  type        = string
+  default     = "[]"
 
   validation {
-    condition     = length(var.cluster_vpc_config) <= 1
-    error_message = "Provide at most one cluster_vpc_config block. Pass it as a Terraform list/object, not as a quoted string."
+    condition     = try(length(jsondecode(var.cluster_vpc_config)) <= 1, false)
+    error_message = "cluster_vpc_config must be valid JSON containing at most one configuration object."
   }
 }
 
@@ -139,18 +129,14 @@ variable "node_group_role_arn" {
 
 variable "node_group_subnet_ids" {
   description = "(Required) Identifiers of EC2 Subnets to associate with the EKS Node Group. These subnets must have the following resource tag: kubernetes.io/cluster/CLUSTER_NAME (where CLUSTER_NAME is replaced with the name of the EKS Cluster)."
-  default     = []
+  type    = string
+  default = "[]"
 }
 
 variable "node_group_scaling_config" {
   description = ""
-  default = [
-    {
-      max_size     = 1
-      desired_size = 1
-      min_size     = 1
-    }
-  ]
+  type    = string
+  default = "[]"
 }
 
 variable "node_group_ami_type" {
@@ -175,7 +161,8 @@ variable "node_group_force_update_version" {
 
 variable "node_group_instance_types" {
   description = "(Optional) Set of instance types associated with the EKS Node Group. Defaults to ['t3.medium']. Terraform will only perform drift detection if a configuration value is provided. Currently, the EKS API only accepts a single value in the set."
-  default     = ["c7i-flex.large"]
+  type    = string
+  default = "[\"c7i-flex.large\"]"
 }
 
 variable "node_group_labels" {
