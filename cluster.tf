@@ -15,6 +15,10 @@ resource "aws_eks_cluster" "eks_cluster" {
   enabled_cluster_log_types = var.cluster_enabled_cluster_log_types
   version                   = var.cluster_version
 
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   dynamic "encryption_config" {
     iterator = encryption_config
     for_each = var.cluster_encryption_config
@@ -72,7 +76,7 @@ resource "aws_eks_access_entry" "cluster_access" {
   cluster_name      = aws_eks_cluster.eks_cluster[0].name
   principal_arn     = each.value["principal_arn"]
   type              = try(each.value["type"], "STANDARD")
-  kubernetes_groups = try(each.value["kubernetes_groups"], ["system:masters"])
+  kubernetes_groups = try(each.value["kubernetes_groups"], [])
   user_name         = try(each.value["user_name"], null)
 
   depends_on = [aws_eks_cluster.eks_cluster]

@@ -1,6 +1,29 @@
 #---------------------------------------------------
 # AWS EKS node group
 #---------------------------------------------------
+locals {
+  node_group_ssh_source_security_group_ids = length(var.node_group_ssh_source_security_group_ids) > 0 ? var.node_group_ssh_source_security_group_ids : try(
+    compact(split(",", split("|", var.cluster_vpc_config)[1])),
+    []
+  )
+
+  node_group_default_remote_access = [
+    {
+      ec2_ssh_key               = "eks-worker-key"
+      source_security_group_ids = local.node_group_ssh_source_security_group_ids
+    }
+  ]
+
+  node_group_effective_remote_access = length(var.node_group_remote_access) > 0 ? var.node_group_remote_access : local.node_group_default_remote_access
+}
+
+resource "aws_iam_role_policy_attachment" "eks_node_group_ssm" {
+  count = var.node_group_enable && var.node_group_ssm_access_enable ? 1 : 0
+
+  role       = element(reverse(split("/", var.node_group_role_arn)), 0)
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_eks_node_group" "eks_node_group" {
   count = var.node_group_enable ? 1 : 0
 
@@ -26,7 +49,7 @@ resource "aws_eks_node_group" "eks_node_group" {
 
   dynamic "remote_access" {
     iterator = remote_access
-    for_each = var.node_group_remote_access
+    for_each = local.node_group_effective_remote_access
 
     content {
       ec2_ssh_key               = lookup(remote_access.value, "ec2_ssh_key", null)
@@ -55,14 +78,24 @@ resource "aws_eks_node_group" "eks_node_group" {
     }
   }
 
-  tags = merge({ Name = var.node_group_name }, var.tags )
+  tags = merge({ Name = var.node_group_name }, var.tags)
 
   lifecycle {
     create_before_destroy = true
     ignore_changes        = []
+
+    precondition {
+      condition = alltrue([
+        for remote_access in local.node_group_effective_remote_access :
+        trimspace(try(remote_access.ec2_ssh_key, "")) != "" &&
+        length(try(remote_access.source_security_group_ids, [])) > 0
+      ])
+      error_message = "SSH remote access requires an EC2 key name and at least one restricted source security group."
+    }
   }
 
   depends_on = [
-    aws_eks_cluster.eks_cluster
+    aws_eks_cluster.eks_cluster,
+    aws_iam_role_policy_attachment.eks_node_group_ssm
   ]
 }

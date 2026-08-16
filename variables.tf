@@ -104,13 +104,12 @@ variable "cluster_access_policy_arn" {
 }
 
 variable "cluster_access_entries" {
-  description = "List of IAM principals that should be allowed to access the cluster from the AWS console and kubectl. Each item should include principal_arn and may optionally include type, user_name, kubernetes_groups. The default admin group is system:masters."
+  description = "List of IAM principals that should be allowed to access the cluster. Use reserved system:* Kubernetes groups is not allowed in EKS access entries; leave kubernetes_groups unset or use custom groups only. The cluster access policy provides the console admin permissions."
   type        = list(any)
-  default     = [
+  default = [
     {
-      principal_arn     = "arn:aws:iam::634222034927:user/suman"
-      type              = "STANDARD"
-      kubernetes_groups = ["system:masters"]
+      principal_arn = "arn:aws:iam::634222034927:user/suman"
+      type          = "STANDARD"
     }
   ]
 }
@@ -176,6 +175,12 @@ variable "node_group_role_arn" {
   default     = ""
 }
 
+variable "node_group_ssm_access_enable" {
+  description = "Attach AmazonSSMManagedInstanceCore to the EKS node IAM role so worker nodes can register with Systems Manager and use Session Manager."
+  type        = bool
+  default     = true
+}
+
 variable "node_group_subnet_ids" {
   description = "Comma-separated subnet IDs for the EKS Node Group."
   type        = string
@@ -231,7 +236,13 @@ variable "node_group_version" {
 }
 
 variable "node_group_remote_access" {
-  description = "(Optional) Configuration block with remote access settings."
+  description = "Optional complete remote-access configuration. When empty, the hardcoded eks-worker-key and node_group_ssh_source_security_group_ids are used."
+  default     = []
+}
+
+variable "node_group_ssh_source_security_group_ids" {
+  description = "Security groups allowed to initiate SSH to worker nodes. When empty, the security groups from cluster_vpc_config are used."
+  type        = list(string)
   default     = []
 }
 
