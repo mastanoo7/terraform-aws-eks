@@ -3,7 +3,7 @@
 #-----------------------------------------------------------
 variable "region" {
   description = "The region where to deploy this code (e.g. us-east-1)."
-  default     = "ap-southeast-3"
+  default     = null
 }
 
 variable "access_key" {
@@ -95,6 +95,24 @@ variable "cluster_encryption_config" {
 variable "cluster_timeouts" {
   description = "Set timeouts for EKS cluster"
   default     = {}
+}
+
+variable "cluster_access_policy_arn" {
+  description = "IAM policy ARN to associate with the EKS cluster access entry for console and workload visibility. Default is the admin policy needed to view workloads in the AWS console."
+  type        = string
+  default     = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+}
+
+variable "cluster_access_entries" {
+  description = "List of IAM principals that should be allowed to access the cluster from the AWS console and kubectl. Each item should include principal_arn and may optionally include type, user_name, kubernetes_groups. The default admin group is system:masters."
+  type        = list(any)
+  default     = [
+    {
+      principal_arn     = "arn:aws:iam::634222034927:user/suman"
+      type              = "STANDARD"
+      kubernetes_groups = ["system:masters"]
+    }
+  ]
 }
 
 #---------------------------------------------------

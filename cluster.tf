@@ -62,3 +62,32 @@ resource "aws_eks_cluster" "eks_cluster" {
 
   depends_on = []
 }
+
+resource "aws_eks_access_entry" "cluster_access" {
+  for_each = var.cluster_enable ? {
+    for entry in var.cluster_access_entries : lookup(entry, "principal_arn", "") => entry
+    if trimspace(lookup(entry, "principal_arn", "")) != ""
+  } : {}
+
+  cluster_name      = aws_eks_cluster.eks_cluster[0].name
+  principal_arn     = each.value["principal_arn"]
+  type              = try(each.value["type"], "STANDARD")
+  kubernetes_groups = try(each.value["kubernetes_groups"], ["system:masters"])
+  user_name         = try(each.value["user_name"], null)
+
+  depends_on = [aws_eks_cluster.eks_cluster]
+}
+
+resource "aws_eks_access_policy_association" "cluster_access" {
+  for_each = aws_eks_access_entry.cluster_access
+
+  cluster_name = aws_eks_cluster.eks_cluster[0].name
+  policy_arn   = var.cluster_access_policy_arn
+  principal_arn = each.value.principal_arn
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.cluster_access]
+}
