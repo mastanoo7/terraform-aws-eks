@@ -6,6 +6,16 @@ output "cluster_id" {
   value       = element(concat(aws_eks_cluster.eks_cluster.*.id, [""], ), 0)
 }
 
+output "cluster_name" {
+  description = "Scalar EKS cluster name for Morpheus post-provision integration."
+  value       = try(aws_eks_cluster.eks_cluster[0].name, "")
+}
+
+output "cluster_region" {
+  description = "AWS region containing the EKS cluster."
+  value       = coalesce(var.aws_region, var.region)
+}
+
 output "cluster_arn" {
   description = "The Amazon Resource Name (ARN) of the cluster."
   value       = element(concat(aws_eks_cluster.eks_cluster.*.arn, [""], ), 0)
@@ -14,6 +24,11 @@ output "cluster_arn" {
 output "cluster_endpoint" {
   description = "The endpoint for your Kubernetes API server."
   value       = concat(aws_eks_cluster.eks_cluster.*.endpoint, [""], )
+}
+
+output "cluster_endpoint_value" {
+  description = "Scalar Kubernetes API endpoint for Morpheus post-provision integration."
+  value       = try(aws_eks_cluster.eks_cluster[0].endpoint, "")
 }
 
 output "cluster_identity" {
@@ -39,6 +54,11 @@ output "cluster_version" {
 output "cluster_certificate_authority" {
   description = "Nested attribute containing certificate-authority-data for your cluster."
   value       = concat(aws_eks_cluster.eks_cluster.*.certificate_authority, [""], )
+}
+
+output "cluster_certificate_authority_data" {
+  description = "Base64-encoded cluster CA data for Morpheus post-provision integration."
+  value       = try(aws_eks_cluster.eks_cluster[0].certificate_authority[0].data, "")
 }
 
 output "cluster_vpc_config" {
