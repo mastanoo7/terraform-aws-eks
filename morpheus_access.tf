@@ -29,6 +29,13 @@ resource "kubernetes_service_account_v1" "morpheus" {
     name      = "morpheus"
     namespace = "kube-system"
   }
+
+  # The Kubernetes provider authenticates as the AWS principal running
+  # Terraform. Ensure its EKS access policy is active before contacting the
+  # Kubernetes API, otherwise a parallel first apply can fail with 401.
+  depends_on = [
+    aws_eks_access_policy_association.cluster_access
+  ]
 }
 
 resource "kubernetes_cluster_role_binding_v1" "morpheus_admin" {
