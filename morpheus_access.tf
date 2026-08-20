@@ -7,24 +7,24 @@ terraform {
   }
 }
 
+data "aws_eks_cluster_auth" "morpheus" {
+  count = var.cluster_enable ? 1 : 0
+  name  = aws_eks_cluster.eks_cluster[0].name
+
+  # Force token generation during apply, after EKS and its access policy
+  # are ready. This avoids both token expiry and an AWS CLI dependency.
+  depends_on = [
+    aws_eks_cluster.eks_cluster,
+    aws_eks_access_policy_association.cluster_access,
+  ]
+}
+
 provider "kubernetes" {
   host = var.cluster_enable ? aws_eks_cluster.eks_cluster[0].endpoint : "https://127.0.0.1"
   cluster_ca_certificate = var.cluster_enable ? base64decode(
     aws_eks_cluster.eks_cluster[0].certificate_authority[0].data
   ) : ""
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args = [
-      "eks",
-      "get-token",
-      "--cluster-name",
-      var.cluster_enable ? aws_eks_cluster.eks_cluster[0].name : "",
-      "--region",
-      var.region
-    ]
-  }
+  token = var.cluster_enable ? data.aws_eks_cluster_auth.morpheus[0].token : ""
 }
 
 resource "kubernetes_service_account_v1" "morpheus" {
